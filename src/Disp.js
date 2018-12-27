@@ -293,7 +293,7 @@ CM.Disp.UpdateBotBarOther = function() {
 		for (var i in CM.Cache.Objects) {
 			count++;
 			CM.Disp.BotBar.firstChild.firstChild.childNodes[0].childNodes[count].childNodes[1].textContent = Game.Objects[i].amount;
-			CM.Disp.BotBar.firstChild.firstChild.childNodes[1].childNodes[count].textContent = Beautify(CM.Cache.Objects[i].bonus, 2);
+			CM.Disp.BotBar.firstChild.firstChild.childNodes[1].childNodes[count].textContent = Beautify(CM.Cache.Objects[i].bonusWithClicks, 2);
 			CM.Disp.BotBar.firstChild.firstChild.childNodes[2].childNodes[count].className = CM.Disp.colorTextPre + CM.Cache.Objects[i].color;
 			CM.Disp.BotBar.firstChild.firstChild.childNodes[2].childNodes[count].textContent = Beautify(CM.Cache.Objects[i].pp, 2);
 		}
@@ -1345,10 +1345,10 @@ CM.Disp.AddMenuStats = function(title) {
 		cookiesNextFrag.appendChild(cookiesNextSmall);
 		stats.appendChild(listing(listingQuest('Cookies To Next Level', 'NextPrestTooltipPlaceholder'), cookiesNextFrag));
 		stats.appendChild(listing(listingQuest('Heavenly Chips (CUR / MAX)', 'HeavenChipMaxTooltipPlaceholder'),  document.createTextNode(Beautify(Game.heavenlyChips) + ' / ' + Beautify((possiblePresMax - Game.prestige) + Game.heavenlyChips))));
-		var resetBonus = CM.Sim.ResetBonus(possiblePresMax);
+		var resetBonusWithClicks = CM.Sim.ResetBonusWithClicks(possiblePresMax);
 		var resetFrag = document.createDocumentFragment();
-		resetFrag.appendChild(document.createTextNode(Beautify(resetBonus)));
-		var increase = Math.round(resetBonus / Game.cookiesPs * 10000);
+		resetFrag.appendChild(document.createTextNode(Beautify(resetBonusWithClicks)));
+		var increase = Math.round(resetBonusWithClicks / CM.Cache.cookiesPsWithClicks * 10000);
 		if (isFinite(increase) && increase != 0) {
 			var resetSmall = document.createElement('small');
 			resetSmall.textContent = ' (' + (increase / 100) + '% of income)';
@@ -1729,6 +1729,7 @@ CM.Disp.UpdateTooltip = function() {
 				}
 				var price;
 				var bonus;
+				var bonusWithClicks;
 				if (CM.Disp.tooltipType == 'b') {
 					var target = '';
 					if (Game.buyMode == 1 && Game.buyBulk == 10) {
@@ -1744,6 +1745,7 @@ CM.Disp.UpdateTooltip = function() {
 						price = Game.Objects[CM.Disp.tooltipName].getPrice();
 					}
 					bonus = CM.Cache[target][CM.Disp.tooltipName].bonus;
+					bonusWithClicks = CM.Cache[target][CM.Disp.tooltipName].bonusWithClicks;
 					if (CM.Config.TooltipBuildUp == 1 && Game.buyMode == 1) {
 						l('CMTooltipBorder').className = CM.Disp.colorTextPre + CM.Cache[target][CM.Disp.tooltipName].color;
 						l('CMTooltipPP').textContent = Beautify(CM.Cache[target][CM.Disp.tooltipName].pp, 2);
@@ -1752,6 +1754,7 @@ CM.Disp.UpdateTooltip = function() {
 				}
 				else { // Upgrades
 					bonus = CM.Cache.Upgrades[Game.UpgradesInStore[CM.Disp.tooltipName].name].bonus;
+					bonusWithClicks = CM.Cache.Upgrades[Game.UpgradesInStore[CM.Disp.tooltipName].name].bonusWithClicks;
 					price = Game.Upgrades[Game.UpgradesInStore[CM.Disp.tooltipName].name].getPrice();
 					if (CM.Config.TooltipBuildUp == 1) {
 						l('CMTooltipBorder').className = CM.Disp.colorTextPre + CM.Cache.Upgrades[Game.UpgradesInStore[CM.Disp.tooltipName].name].color;
@@ -1760,9 +1763,9 @@ CM.Disp.UpdateTooltip = function() {
 					}
 				}
 				if (CM.Config.TooltipBuildUp == 1 && (CM.Disp.tooltipType != 'b' || Game.buyMode == 1)) {
-					l('CMTooltipIncome').textContent = Beautify(bonus, 2);
+					l('CMTooltipIncome').textContent = Beautify(bonusWithClicks, 2);
 
-					var increase = Math.round(bonus / Game.cookiesPs * 10000);
+					var increase = Math.round(bonusWithClicks / CM.Cache.cookiesPsWithClicks * 10000);
 					if (isFinite(increase) && increase != 0) {
 						l('CMTooltipIncome').textContent += ' (' + (increase / 100) + '% of income)';
 					}

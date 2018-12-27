@@ -452,10 +452,6 @@ CM.Sim.CheckOtherAchiev = function() {
 }
 
 CM.Sim.BuyBuildings = function(amount, target) {
-	CM.Sim.CopyData();
-	CM.Sim.CalculateGains();
-	var prevCookiesPsWithClicks = CM.Sim.cookiesPsWithClicks;
-
 	CM.Cache[target] = [];
 	for (var i in Game.Objects) {
 		CM.Sim.CopyData();
@@ -491,7 +487,8 @@ CM.Sim.BuyBuildings = function(amount, target) {
 		}
 
 		CM.Cache[target][i] = {};
-		CM.Cache[target][i].bonus = CM.Sim.cookiesPsWithClicks - prevCookiesPsWithClicks;
+		CM.Cache[target][i].bonus = CM.Sim.cookiesPs - CM.Cache.cookiesPs;
+		CM.Cache[target][i].bonusWithClicks = CM.Sim.cookiesPsWithClicks - CM.Cache.cookiesPsWithClicks;
 		if (amount != 1) {
 			CM.Cache.DoRemakeBuildPrices = 1;
 		}
@@ -499,10 +496,6 @@ CM.Sim.BuyBuildings = function(amount, target) {
 }
 
 CM.Sim.BuyUpgrades = function() {
-	CM.Sim.CopyData();
-	CM.Sim.CalculateGains();
-	var prevCookiesPsWithClicks = CM.Sim.cookiesPsWithClicks;
-
 	CM.Cache.Upgrades = [];
 	for (var i in Game.Upgrades) {
 		if (Game.Upgrades[i].pool == 'toggle' || (Game.Upgrades[i].bought == 0 && Game.Upgrades[i].unlocked && Game.Upgrades[i].pool != 'prestige')) {
@@ -537,7 +530,8 @@ CM.Sim.BuyUpgrades = function() {
 			}
 
 			CM.Cache.Upgrades[i] = {};
-			CM.Cache.Upgrades[i].bonus = CM.Sim.cookiesPsWithClicks - prevCookiesPsWithClicks;
+			CM.Cache.Upgrades[i].bonus = CM.Sim.cookiesPs - CM.Cache.cookiesPs;
+			CM.Cache.Upgrades[i].bonusWithClicks = CM.Sim.cookiesPsWithClicks - CM.Cache.cookiesPsWithClicks;
 		}
 	}
 }
@@ -549,14 +543,14 @@ CM.Sim.NoGoldSwitchCookiesPS = function() {
 		CM.Sim.CalculateGains();
 		CM.Cache.NoGoldSwitchCookiesPS = CM.Sim.cookiesPs;
 	}
-	else CM.Cache.NoGoldSwitchCookiesPS = Game.cookiesPs;
+	else CM.Cache.NoGoldSwitchCookiesPS = CM.Cache.cookiesPs;
 }
 
-CM.Sim.ResetBonus = function(possiblePresMax) {
+CM.Sim.ResetBonusWithClicks = function(possiblePresMax) {
 	var lastAchievementsOwned = -1;
 
 	// Calculate CPS with all Heavenly upgrades
-	var curCPS = Game.cookiesPs;
+	var curCPSWithClicks = CM.Cache.cookiesPsWithClicks;
 
 	CM.Sim.CopyData();
 
@@ -569,7 +563,7 @@ CM.Sim.ResetBonus = function(possiblePresMax) {
 
 		CM.Sim.CalculateGains();
 
-		curCPS = CM.Sim.cookiesPs;
+		curCPSWithClicks = CM.Sim.cookiesPsWithClicks;
 
 		CM.Sim.CopyData();
 	}
@@ -608,6 +602,6 @@ CM.Sim.ResetBonus = function(possiblePresMax) {
 		CM.Sim.CalculateGains();
 	}
 
-	return (CM.Sim.cookiesPs - curCPS);
+	return (CM.Sim.cookiesPsWithClicks - curCPSWithClicks);
 }
 

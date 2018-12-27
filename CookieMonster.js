@@ -44,7 +44,16 @@ CM.Cache.RemakeBuildingsPrices = function() {
 	}
 }
 
+CM.Cache.RemakeCookiesPs = function() {
+	CM.Sim.CopyData();
+	CM.Sim.CalculateGains();
+	CM.Cache.cookiesPs = CM.Sim.cookiesPs;
+	CM.Cache.cookiesPsWithClicks = CM.Sim.cookiesPsWithClicks;
+}
+
 CM.Cache.RemakeIncome = function() {
+	CM.Cache.RemakeCookiesPs();
+
 	// Simulate Building Buys for 1 amount
 	CM.Sim.BuyBuildings(1, 'Objects');
 
@@ -90,8 +99,7 @@ CM.Cache.RemakeBuildingsPP = function() {
 	CM.Cache.max = -1;
 	CM.Cache.mid = -1;
 	for (var i in CM.Cache.Objects) {
-		//CM.Cache.Objects[i].pp = Game.Objects[i].getPrice() / CM.Cache.Objects[i].bonus;
-		CM.Cache.Objects[i].pp = (Math.max(Game.Objects[i].getPrice() - (Game.cookies + CM.Disp.GetWrinkConfigBank()), 0) / Game.cookiesPs) + (Game.Objects[i].getPrice() / CM.Cache.Objects[i].bonus);
+		CM.Cache.Objects[i].pp = (Math.max(Game.Objects[i].getPrice() - (Game.cookies + CM.Disp.GetWrinkConfigBank()), 0) / CM.Cache.cookiesPsWithClicks) + (Game.Objects[i].getPrice() / CM.Cache.Objects[i].bonusWithClicks);
 		if (CM.Cache.min == -1 || CM.Cache.Objects[i].pp < CM.Cache.min) CM.Cache.min = CM.Cache.Objects[i].pp;
 		if (CM.Cache.max == -1 || CM.Cache.Objects[i].pp > CM.Cache.max) CM.Cache.max = CM.Cache.Objects[i].pp;
 	}
@@ -108,8 +116,7 @@ CM.Cache.RemakeBuildingsPP = function() {
 
 CM.Cache.RemakeUpgradePP = function() {
 	for (var i in CM.Cache.Upgrades) {
-		//CM.Cache.Upgrades[i].pp = Game.Upgrades[i].getPrice() / CM.Cache.Upgrades[i].bonus;
-		CM.Cache.Upgrades[i].pp = (Math.max(Game.Upgrades[i].getPrice() - (Game.cookies + CM.Disp.GetWrinkConfigBank()), 0) / Game.cookiesPs) + (Game.Upgrades[i].getPrice() / CM.Cache.Upgrades[i].bonus);
+		CM.Cache.Upgrades[i].pp = (Math.max(Game.Upgrades[i].getPrice() - (Game.cookies + CM.Disp.GetWrinkConfigBank()), 0) / CM.Cache.cookiesPsWithClick) + (Game.Upgrades[i].getPrice() / CM.Cache.Upgrades[i].bonusWithClicks);
 		if (isNaN(CM.Cache.Upgrades[i].pp)) CM.Cache.Upgrades[i].pp = Infinity;
 		var color = '';
 		if (CM.Cache.Upgrades[i].pp <= 0 || CM.Cache.Upgrades[i].pp == Infinity) color = CM.Disp.colorGray;
@@ -125,8 +132,7 @@ CM.Cache.RemakeUpgradePP = function() {
 
 CM.Cache.RemakeBuildingsOtherPP = function(amount, target) {
 	for (var i in CM.Cache[target]) {
-		//CM.Cache[target][i].pp = CM.Cache[target][i].price / CM.Cache[target][i].bonus;
-		CM.Cache[target][i].pp = (Math.max(CM.Cache[target][i].price - (Game.cookies + CM.Disp.GetWrinkConfigBank()), 0) / Game.cookiesPs) + (CM.Cache[target][i].price / CM.Cache[target][i].bonus);
+		CM.Cache[target][i].pp = (Math.max(CM.Cache[target][i].price - (Game.cookies + CM.Disp.GetWrinkConfigBank()), 0) / CM.Cache.cookiesPsWithClicks) + (CM.Cache[target][i].price / CM.Cache[target][i].bonusWithClicks);
 		var color = '';
 		if (CM.Cache[target][i].pp <= 0 || CM.Cache[target][i].pp == Infinity) color = CM.Disp.colorGray;
 		else if (CM.Cache[target][i].pp < CM.Cache.min) color = CM.Disp.colorBlue;
@@ -140,6 +146,8 @@ CM.Cache.RemakeBuildingsOtherPP = function(amount, target) {
 }
 
 CM.Cache.RemakePP = function() {
+	CM.Cache.RemakeCookiesPs();
+
 	// Buildings for 1 amount
 	CM.Cache.RemakeBuildingsPP();
 
@@ -376,6 +384,8 @@ CM.Cache.ChainFrenzyReward = 0;
 CM.Cache.ChainFrenzyWrathReward = 0;
 CM.Cache.CentEgg = 0;
 CM.Cache.SellForChoEgg = 0;
+CM.Cache.cookiesPs = 0;
+CM.Cache.cookiesPsWithClicks = 0;
 CM.Cache.Title = '';
 CM.Cache.HadFierHoard = false;
 CM.Cache.RealCookiesEarned = -1;
@@ -847,7 +857,7 @@ CM.Disp.UpdateBotBarOther = function() {
 		for (var i in CM.Cache.Objects) {
 			count++;
 			CM.Disp.BotBar.firstChild.firstChild.childNodes[0].childNodes[count].childNodes[1].textContent = Game.Objects[i].amount;
-			CM.Disp.BotBar.firstChild.firstChild.childNodes[1].childNodes[count].textContent = Beautify(CM.Cache.Objects[i].bonus, 2);
+			CM.Disp.BotBar.firstChild.firstChild.childNodes[1].childNodes[count].textContent = Beautify(CM.Cache.Objects[i].bonusWithClicks, 2);
 			CM.Disp.BotBar.firstChild.firstChild.childNodes[2].childNodes[count].className = CM.Disp.colorTextPre + CM.Cache.Objects[i].color;
 			CM.Disp.BotBar.firstChild.firstChild.childNodes[2].childNodes[count].textContent = Beautify(CM.Cache.Objects[i].pp, 2);
 		}
@@ -1899,10 +1909,10 @@ CM.Disp.AddMenuStats = function(title) {
 		cookiesNextFrag.appendChild(cookiesNextSmall);
 		stats.appendChild(listing(listingQuest('Cookies To Next Level', 'NextPrestTooltipPlaceholder'), cookiesNextFrag));
 		stats.appendChild(listing(listingQuest('Heavenly Chips (CUR / MAX)', 'HeavenChipMaxTooltipPlaceholder'),  document.createTextNode(Beautify(Game.heavenlyChips) + ' / ' + Beautify((possiblePresMax - Game.prestige) + Game.heavenlyChips))));
-		var resetBonus = CM.Sim.ResetBonus(possiblePresMax);
+		var resetBonusWithClicks = CM.Sim.ResetBonusWithClicks(possiblePresMax);
 		var resetFrag = document.createDocumentFragment();
-		resetFrag.appendChild(document.createTextNode(Beautify(resetBonus)));
-		var increase = Math.round(resetBonus / Game.cookiesPs * 10000);
+		resetFrag.appendChild(document.createTextNode(Beautify(resetBonusWithClicks)));
+		var increase = Math.round(resetBonusWithClicks / CM.Cache.cookiesPsWithClicks * 10000);
 		if (isFinite(increase) && increase != 0) {
 			var resetSmall = document.createElement('small');
 			resetSmall.textContent = ' (' + (increase / 100) + '% of income)';
@@ -2283,6 +2293,7 @@ CM.Disp.UpdateTooltip = function() {
 				}
 				var price;
 				var bonus;
+				var bonusWithClicks;
 				if (CM.Disp.tooltipType == 'b') {
 					var target = '';
 					if (Game.buyMode == 1 && Game.buyBulk == 10) {
@@ -2298,6 +2309,7 @@ CM.Disp.UpdateTooltip = function() {
 						price = Game.Objects[CM.Disp.tooltipName].getPrice();
 					}
 					bonus = CM.Cache[target][CM.Disp.tooltipName].bonus;
+					bonusWithClicks = CM.Cache[target][CM.Disp.tooltipName].bonusWithClicks;
 					if (CM.Config.TooltipBuildUp == 1 && Game.buyMode == 1) {
 						l('CMTooltipBorder').className = CM.Disp.colorTextPre + CM.Cache[target][CM.Disp.tooltipName].color;
 						l('CMTooltipPP').textContent = Beautify(CM.Cache[target][CM.Disp.tooltipName].pp, 2);
@@ -2306,6 +2318,7 @@ CM.Disp.UpdateTooltip = function() {
 				}
 				else { // Upgrades
 					bonus = CM.Cache.Upgrades[Game.UpgradesInStore[CM.Disp.tooltipName].name].bonus;
+					bonusWithClicks = CM.Cache.Upgrades[Game.UpgradesInStore[CM.Disp.tooltipName].name].bonusWithClicks;
 					price = Game.Upgrades[Game.UpgradesInStore[CM.Disp.tooltipName].name].getPrice();
 					if (CM.Config.TooltipBuildUp == 1) {
 						l('CMTooltipBorder').className = CM.Disp.colorTextPre + CM.Cache.Upgrades[Game.UpgradesInStore[CM.Disp.tooltipName].name].color;
@@ -2314,9 +2327,9 @@ CM.Disp.UpdateTooltip = function() {
 					}
 				}
 				if (CM.Config.TooltipBuildUp == 1 && (CM.Disp.tooltipType != 'b' || Game.buyMode == 1)) {
-					l('CMTooltipIncome').textContent = Beautify(bonus, 2);
+					l('CMTooltipIncome').textContent = Beautify(bonusWithClicks, 2);
 
-					var increase = Math.round(bonus / Game.cookiesPs * 10000);
+					var increase = Math.round(bonusWithClicks / CM.Cache.cookiesPsWithClicks * 10000);
 					if (isFinite(increase) && increase != 0) {
 						l('CMTooltipIncome').textContent += ' (' + (increase / 100) + '% of income)';
 					}
@@ -3274,10 +3287,6 @@ CM.Sim.CheckOtherAchiev = function() {
 }
 
 CM.Sim.BuyBuildings = function(amount, target) {
-	CM.Sim.CopyData();
-	CM.Sim.CalculateGains();
-	var prevCookiesPsWithClicks = CM.Sim.cookiesPsWithClicks;
-
 	CM.Cache[target] = [];
 	for (var i in Game.Objects) {
 		CM.Sim.CopyData();
@@ -3313,7 +3322,8 @@ CM.Sim.BuyBuildings = function(amount, target) {
 		}
 
 		CM.Cache[target][i] = {};
-		CM.Cache[target][i].bonus = CM.Sim.cookiesPsWithClicks - prevCookiesPsWithClicks;
+		CM.Cache[target][i].bonus = CM.Sim.cookiesPs - CM.Cache.cookiesPs;
+		CM.Cache[target][i].bonusWithClicks = CM.Sim.cookiesPsWithClicks - CM.Cache.cookiesPsWithClicks;
 		if (amount != 1) {
 			CM.Cache.DoRemakeBuildPrices = 1;
 		}
@@ -3321,10 +3331,6 @@ CM.Sim.BuyBuildings = function(amount, target) {
 }
 
 CM.Sim.BuyUpgrades = function() {
-	CM.Sim.CopyData();
-	CM.Sim.CalculateGains();
-	var prevCookiesPsWithClicks = CM.Sim.cookiesPsWithClicks;
-
 	CM.Cache.Upgrades = [];
 	for (var i in Game.Upgrades) {
 		if (Game.Upgrades[i].pool == 'toggle' || (Game.Upgrades[i].bought == 0 && Game.Upgrades[i].unlocked && Game.Upgrades[i].pool != 'prestige')) {
@@ -3359,7 +3365,8 @@ CM.Sim.BuyUpgrades = function() {
 			}
 
 			CM.Cache.Upgrades[i] = {};
-			CM.Cache.Upgrades[i].bonus = CM.Sim.cookiesPsWithClicks - prevCookiesPsWithClicks;
+			CM.Cache.Upgrades[i].bonus = CM.Sim.cookiesPs - CM.Cache.cookiesPs;
+			CM.Cache.Upgrades[i].bonusWithClicks = CM.Sim.cookiesPsWithClicks - CM.Cache.cookiesPsWithClicks;
 		}
 	}
 }
@@ -3371,14 +3378,14 @@ CM.Sim.NoGoldSwitchCookiesPS = function() {
 		CM.Sim.CalculateGains();
 		CM.Cache.NoGoldSwitchCookiesPS = CM.Sim.cookiesPs;
 	}
-	else CM.Cache.NoGoldSwitchCookiesPS = Game.cookiesPs;
+	else CM.Cache.NoGoldSwitchCookiesPS = CM.Cache.cookiesPs;
 }
 
-CM.Sim.ResetBonus = function(possiblePresMax) {
+CM.Sim.ResetBonusWithClicks = function(possiblePresMax) {
 	var lastAchievementsOwned = -1;
 
 	// Calculate CPS with all Heavenly upgrades
-	var curCPS = Game.cookiesPs;
+	var curCPSWithClicks = CM.Cache.cookiesPsWithClicks;
 
 	CM.Sim.CopyData();
 
@@ -3391,7 +3398,7 @@ CM.Sim.ResetBonus = function(possiblePresMax) {
 
 		CM.Sim.CalculateGains();
 
-		curCPS = CM.Sim.cookiesPs;
+		curCPSWithClicks = CM.Sim.cookiesPsWithClicks;
 
 		CM.Sim.CopyData();
 	}
@@ -3430,7 +3437,7 @@ CM.Sim.ResetBonus = function(possiblePresMax) {
 		CM.Sim.CalculateGains();
 	}
 
-	return (CM.Sim.cookiesPs - curCPS);
+	return (CM.Sim.cookiesPsWithClicks - curCPSWithClicks);
 }
 
 /**********
