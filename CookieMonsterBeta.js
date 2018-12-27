@@ -2692,6 +2692,10 @@ CM.Loop = function() {
 		CM.Disp.lastAscendState = Game.OnAscend;
 		CM.Disp.UpdateAscendState();
 	}
+
+	// Update Average CPS (might need to move)
+	CM.Cache.UpdateAvgCPS()
+
 	if (!Game.OnAscend && Game.AscendTimer == 0) {
 		if (CM.Sim.DoSims) {
 			CM.Cache.RemakeIncome();
@@ -2753,9 +2757,6 @@ CM.Loop = function() {
 
 	// Check Season Popup
 	CM.Disp.CheckSeasonPopup();
-
-	// Update Average CPS (might need to move)
-	CM.Cache.UpdateAvgCPS()
 }
 
 CM.Init = function() {
@@ -2817,7 +2818,7 @@ CM.ConfigDefault = {BotBar: 1, TimerBar: 1, TimerBarPos: 0, BuildColor: 1, BulkB
 CM.ConfigPrefix = 'CMConfig';
 
 CM.VersionMajor = '2.016';
-CM.VersionMinor = '1';
+CM.VersionMinor = '2';
 
 /*******
  * Sim *
@@ -2976,15 +2977,73 @@ CM.Sim.CopyData = function() {
 };
 
 
+CM.Sim.ComputeCps = function(base,mult,bonus) {
+	if (!bonus) bonus=0;
+	return ((base)*(Math.pow(2,mult))+bonus);
+}
+
+CM.Sim.mouseCps = function() {
+	var add=0;
+	if (CM.Sim.Has('Thousand fingers')) add+=	0.1;
+	if (CM.Sim.Has('Million fingers')) add+=	0.5;
+	if (CM.Sim.Has('Billion fingers')) add+=	5;
+	if (CM.Sim.Has('Trillion fingers')) add+=	50;
+	if (CM.Sim.Has('Quadrillion fingers')) add+=	500;
+	if (CM.Sim.Has('Quintillion fingers')) add+=	5000;
+	if (CM.Sim.Has('Sextillion fingers')) add+=	50000;
+	if (CM.Sim.Has('Septillion fingers')) add+=	500000;
+	if (CM.Sim.Has('Octillion fingers')) add+=	5000000;
+	var num=0;
+	for (var i in CM.Sim.Objects) {num+=CM.Sim.Objects[i].amount;}
+	num-=CM.Sim.Objects['Cursor'].amount;
+	add=add*num;
+	if (CM.Sim.Has('Plastic mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Iron mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Titanium mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Adamantium mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Unobtainium mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Eludium mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Wishalloy mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Fantasteel mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Nevercrack mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Armythril mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Technobsidian mouse')) add+=CM.Sim.cookiesPs*0.01;
+	if (CM.Sim.Has('Plasmarble mouse')) add+=CM.Sim.cookiesPs*0.01;
+	var mult=1;
+
+	if (CM.Sim.Has('Santa\'s helpers')) mult*=1.1;
+	if (CM.Sim.Has('Cookie egg')) mult*=1.1;
+	if (CM.Sim.Has('Halo gloves')) mult*=1.1;
+
+	mult*=Game.eff('click');
+
+	if (Game.hasGod)
+	{
+		var godLvl=Game.hasGod('labor');
+		if (godLvl==1) mult*=1.15;
+		else if (godLvl==2) mult*=1.1;
+		else if (godLvl==3) mult*=1.05;
+	}
+
+	// Removed buffs
+
+	if (CM.Sim.hasAura('Dragon Cursor')) mult*=1.05;
+
+	var out=mult*CM.Sim.ComputeCps(1,CM.Sim.Has('Reinforced index finger')+CM.Sim.Has('Carpal tunnel prevention cream')+CM.Sim.Has('Ambidextrous'),add);
+
+	// Removed buffs
+	return out;
+};
+
 CM.Sim.CalculateGains = function() {
 	CM.Sim.cookiesPs = 0;
 	var mult = 1;
-	
+
 	if (Game.ascensionMode != 1) mult += parseFloat(CM.Sim.prestige) * 0.01 * CM.Sim.heavenlyPower * CM.Sim.GetHeavenlyMultiplier();
-	
+
 	// TODO Store minigame buffs?
 	mult *= Game.eff('cps');
-	
+
 	if (CM.Sim.Has('Heralds') && Game.ascensionMode != 1) mult *= 1 + 0.01 * Game.heralds;
 
 	var cookieMult = 0;
@@ -3138,13 +3197,17 @@ CM.Sim.CalculateGains = function() {
 	}
 	if (CM.Sim.Has('Shimmering veil [off]')) mult *= 1.5;
 	// Removed debug upgrades
-	
+
 	// Removed buffs
 
 	CM.Sim.cookiesPs *= mult;
 
-	// TODO remove?
-	// if (Game.hasBuff('Cursed finger')) Game.cookiesPs = 0;
+	// Removed buffs
+
+	CM.Sim.cookiesPsWithClicks = CM.Sim.cookiesPs;
+	if (CM.Cache.AvgClicks && CM.Cache.AvgClicks >= 0) {
+		CM.Sim.cookiesPsWithClicks += CM.Cache.AvgClicks * CM.Sim.mouseCps();
+	}
 };
 
 CM.Sim.CheckOtherAchiev = function() {
@@ -3211,6 +3274,10 @@ CM.Sim.CheckOtherAchiev = function() {
 }
 
 CM.Sim.BuyBuildings = function(amount, target) {
+	CM.Sim.CopyData();
+	CM.Sim.CalculateGains();
+	var prevCookiesPsWithClicks = CM.Sim.cookiesPsWithClicks;
+
 	CM.Cache[target] = [];
 	for (var i in Game.Objects) {
 		CM.Sim.CopyData();
@@ -3246,7 +3313,7 @@ CM.Sim.BuyBuildings = function(amount, target) {
 		}
 
 		CM.Cache[target][i] = {};
-		CM.Cache[target][i].bonus = CM.Sim.cookiesPs - Game.cookiesPs;
+		CM.Cache[target][i].bonus = CM.Sim.cookiesPsWithClicks - prevCookiesPsWithClicks;
 		if (amount != 1) {
 			CM.Cache.DoRemakeBuildPrices = 1;
 		}
@@ -3254,6 +3321,10 @@ CM.Sim.BuyBuildings = function(amount, target) {
 }
 
 CM.Sim.BuyUpgrades = function() {
+	CM.Sim.CopyData();
+	CM.Sim.CalculateGains();
+	var prevCookiesPsWithClicks = CM.Sim.cookiesPsWithClicks;
+
 	CM.Cache.Upgrades = [];
 	for (var i in Game.Upgrades) {
 		if (Game.Upgrades[i].pool == 'toggle' || (Game.Upgrades[i].bought == 0 && Game.Upgrades[i].unlocked && Game.Upgrades[i].pool != 'prestige')) {
@@ -3288,7 +3359,7 @@ CM.Sim.BuyUpgrades = function() {
 			}
 
 			CM.Cache.Upgrades[i] = {};
-			CM.Cache.Upgrades[i].bonus = CM.Sim.cookiesPs - Game.cookiesPs;
+			CM.Cache.Upgrades[i].bonus = CM.Sim.cookiesPsWithClicks - prevCookiesPsWithClicks;
 		}
 	}
 }
