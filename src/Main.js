@@ -123,6 +123,10 @@ CM.Loop = function() {
 		CM.Disp.lastAscendState = Game.OnAscend;
 		CM.Disp.UpdateAscendState();
 	}
+
+	// Update Average CPS (might need to move)
+	CM.Cache.UpdateAvgCPS()
+
 	if (!Game.OnAscend && Game.AscendTimer == 0) {
 		if (CM.Sim.DoSims) {
 			CM.Cache.RemakeIncome();
@@ -184,9 +188,6 @@ CM.Loop = function() {
 
 	// Check Season Popup
 	CM.Disp.CheckSeasonPopup();
-
-	// Update Average CPS (might need to move)
-	CM.Cache.UpdateAvgCPS()
 }
 
 CM.Init = function() {
