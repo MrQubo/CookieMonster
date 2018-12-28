@@ -116,7 +116,7 @@ CM.Cache.RemakeBuildingsPP = function() {
 
 CM.Cache.RemakeUpgradePP = function() {
 	for (var i in CM.Cache.Upgrades) {
-		CM.Cache.Upgrades[i].pp = (Math.max(Game.Upgrades[i].getPrice() - (Game.cookies + CM.Disp.GetWrinkConfigBank()), 0) / CM.Cache.cookiesPsWithClick) + (Game.Upgrades[i].getPrice() / CM.Cache.Upgrades[i].bonusWithClicks);
+		CM.Cache.Upgrades[i].pp = (Math.max(Game.Upgrades[i].getPrice() - (Game.cookies + CM.Disp.GetWrinkConfigBank()), 0) / CM.Cache.cookiesPsWithClicks) + (Game.Upgrades[i].getPrice() / CM.Cache.Upgrades[i].bonusWithClicks);
 		if (isNaN(CM.Cache.Upgrades[i].pp)) CM.Cache.Upgrades[i].pp = Infinity;
 		var color = '';
 		if (CM.Cache.Upgrades[i].pp <= 0 || CM.Cache.Upgrades[i].pp == Infinity) color = CM.Disp.colorGray;
@@ -2831,7 +2831,7 @@ CM.ConfigDefault = {BotBar: 1, TimerBar: 1, TimerBarPos: 0, BuildColor: 1, BulkB
 CM.ConfigPrefix = 'CMConfig';
 
 CM.VersionMajor = '2.016';
-CM.VersionMinor = '2';
+CM.VersionMinor = '3';
 
 /*******
  * Sim *
