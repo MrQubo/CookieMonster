@@ -1778,12 +1778,12 @@ CM.Disp.UpdateTooltip = function() {
 				if (CM.Config.ToolWarnCaut == 1) {
 					CM.Disp.TooltipWarnCaut.style.display = 'block';
 					var warn = CM.Cache.Lucky;
+					var caut = CM.Cache.LuckyFrenzy;
 					if (CM.Config.ToolWarnCautBon == 1) {
-						var bonusNoFren = bonus;
-						bonusNoFren /= CM.Sim.getCPSBuffMult();
-						warn += ((bonusNoFren * 60 * 15) / 0.15);
+						var luckyDiff = CM.Sim.getLuckyDiff(bonus);
+						warn += luckyDiff.Lucky;
+						caut += luckyDiff.LuckyFrenzy;
 					}
-					var caut = warn * 7;
 					var amount = (Game.cookies + CM.Disp.GetWrinkConfigBank()) - price;
 					if ((amount < warn || amount < caut) && (CM.Disp.tooltipType != 'b' || Game.buyMode == 1)) {
 						if (CM.Config.ToolWarnCautPos == 0) {

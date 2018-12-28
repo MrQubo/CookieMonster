@@ -142,11 +142,11 @@ CM.Cache.RemakePP = function() {
 }
 
 CM.Cache.RemakeLucky = function() {
-	CM.Cache.Lucky = (CM.Cache.NoGoldSwitchCookiesPS * 60 * 15) / 0.15;
-	CM.Cache.Lucky /= CM.Sim.getCPSBuffMult();
-	CM.Cache.LuckyReward = (CM.Cache.Lucky * 0.15) + 13;
-	CM.Cache.LuckyFrenzy = CM.Cache.Lucky * 7;
-	CM.Cache.LuckyRewardFrenzy = (CM.Cache.LuckyFrenzy * 0.15) + 13;
+	var lucky = CM.Sim.getLucky(CM.Cache.NoGoldSwitchCookiesPS);
+	CM.Cache.Lucky = lucky.Lucky;
+	CM.Cache.LuckyReward = lucky.LuckyReward;
+	CM.Cache.LuckyFrenzy = lucky.LuckyFrenzy;
+	CM.Cache.LuckyRewardFrenzy = lucky.LuckyRewardFrenzy;
 }
 
 CM.Cache.MaxChainMoni = function(digit, maxPayout) {

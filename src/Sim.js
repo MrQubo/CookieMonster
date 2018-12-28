@@ -95,6 +95,24 @@ CM.Sim.getCPSBuffMult = function() {
 	return mult;
 }
 
+CM.Sim.getLucky = function(cookiesPs) {
+	var out = {};
+	out.Lucky = (cookiesPs * 900) / 0.15;
+	out.Lucky /= CM.Sim.getCPSBuffMult();
+	out.LuckyReward = (out.Lucky * 0.15) + 13;
+	out.LuckyFrenzy = out.Lucky * 7;
+	out.LuckyRewardFrenzy = (out.LuckyFrenzy * 0.15) + 13;
+	return out;
+}
+
+CM.Sim.getLuckyDiff = function(cookiesPsDiff) {
+	var out = {};
+	out.Lucky = (cookiesPsDiff * 900) / 0.15;
+	out.Lucky /= CM.Sim.getCPSBuffMult();
+	out.LuckyFrenzy = out.Lucky * 7;
+	return out;
+}
+
 CM.Sim.InitData = function() {
 	// Buildings
 	CM.Sim.Objects = [];
