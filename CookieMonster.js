@@ -162,11 +162,11 @@ CM.Cache.RemakePP = function() {
 }
 
 CM.Cache.RemakeLucky = function() {
-	CM.Cache.Lucky = (CM.Cache.NoGoldSwitchCookiesPS * 60 * 15) / 0.15;
-	CM.Cache.Lucky /= CM.Sim.getCPSBuffMult();
-	CM.Cache.LuckyReward = (CM.Cache.Lucky * 0.15) + 13;
-	CM.Cache.LuckyFrenzy = CM.Cache.Lucky * 7;
-	CM.Cache.LuckyRewardFrenzy = (CM.Cache.LuckyFrenzy * 0.15) + 13;
+	var lucky = CM.Sim.getLucky(CM.Cache.NoGoldSwitchCookiesPS);
+	CM.Cache.Lucky = lucky.Lucky;
+	CM.Cache.LuckyReward = lucky.LuckyReward;
+	CM.Cache.LuckyFrenzy = lucky.LuckyFrenzy;
+	CM.Cache.LuckyRewardFrenzy = lucky.LuckyRewardFrenzy;
 }
 
 CM.Cache.MaxChainMoni = function(digit, maxPayout) {
@@ -2342,12 +2342,12 @@ CM.Disp.UpdateTooltip = function() {
 				if (CM.Config.ToolWarnCaut == 1) {
 					CM.Disp.TooltipWarnCaut.style.display = 'block';
 					var warn = CM.Cache.Lucky;
+					var caut = CM.Cache.LuckyFrenzy;
 					if (CM.Config.ToolWarnCautBon == 1) {
-						var bonusNoFren = bonus;
-						bonusNoFren /= CM.Sim.getCPSBuffMult();
-						warn += ((bonusNoFren * 60 * 15) / 0.15);
+						var luckyDiff = CM.Sim.getLuckyDiff(bonus);
+						warn += luckyDiff.Lucky;
+						caut += luckyDiff.LuckyFrenzy;
 					}
-					var caut = warn * 7;
 					var amount = (Game.cookies + CM.Disp.GetWrinkConfigBank()) - price;
 					if ((amount < warn || amount < caut) && (CM.Disp.tooltipType != 'b' || Game.buyMode == 1)) {
 						if (CM.Config.ToolWarnCautPos == 0) {
@@ -2831,7 +2831,7 @@ CM.ConfigDefault = {BotBar: 1, TimerBar: 1, TimerBarPos: 0, BuildColor: 1, BulkB
 CM.ConfigPrefix = 'CMConfig';
 
 CM.VersionMajor = '2.016';
-CM.VersionMinor = '4';
+CM.VersionMinor = '5';
 
 /*******
  * Sim *
@@ -2928,6 +2928,24 @@ CM.Sim.getCPSBuffMult = function() {
 		if (typeof Game.buffs[i].multCpS != 'undefined') mult *= Game.buffs[i].multCpS;
 	}
 	return mult;
+}
+
+CM.Sim.getLucky = function(cookiesPs) {
+	var out = {};
+	out.Lucky = (cookiesPs * 900) / 0.15;
+	out.Lucky /= CM.Sim.getCPSBuffMult();
+	out.LuckyReward = (out.Lucky * 0.15) + 13;
+	out.LuckyFrenzy = out.Lucky * 7;
+	out.LuckyRewardFrenzy = (out.LuckyFrenzy * 0.15) + 13;
+	return out;
+}
+
+CM.Sim.getLuckyDiff = function(cookiesPsDiff) {
+	var out = {};
+	out.Lucky = (cookiesPsDiff * 900) / 0.15;
+	out.Lucky /= CM.Sim.getCPSBuffMult();
+	out.LuckyFrenzy = out.Lucky * 7;
+	return out;
 }
 
 CM.Sim.InitData = function() {
