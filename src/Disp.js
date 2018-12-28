@@ -178,9 +178,9 @@ CM.Disp.GetWrinkConfigBank = function() {
 
 CM.Disp.GetCPS = function() {
 	if (CM.Config.CPSMode)
-		return CM.Cache.AvgCPS;
+		return CM.Cache.cookiesPsWithClicks;
 	else
-		return (Game.cookiesPs * (1 - Game.cpsSucked));
+		return (CM.Cache.cookiesPs * (1 - Game.cpsSucked));
 }
 
 CM.Disp.UpdateBackground = function() {
